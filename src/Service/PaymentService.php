@@ -4,24 +4,28 @@ declare(strict_types=1);
 
 namespace App\Service;
 
-use App\Exception\PaymentException;
+use App\Exception\UserException;
 use App\Payment\PaymentProcessorInterface;
 use Psr\Log\LoggerInterface;
 
-class PaymentService
+readonly class PaymentService
 {
     public function __construct(
-        private readonly PaymentProcessorInterface $paymentProcessor,
-        private readonly LoggerInterface $logger,
+        private PaymentProcessorInterface $paymentProcessor,
+        private LoggerInterface           $logger,
     ) {
     }
 
+    /**
+     * @throws UserException
+     */
     public function process(float $amount): void
     {
         try {
             $this->paymentProcessor->pay($amount);
-        } catch (PaymentException $e) {
+        } catch (\Exception $e) {
             $this->logger->error(sprintf('Payment Error: `%s`', $e->getMessage()));
+            throw new UserException('Payment Error');
         }
     }
 }
