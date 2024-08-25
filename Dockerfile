@@ -20,3 +20,14 @@ WORKDIR /app
 EXPOSE 8337
 
 CMD ["php", "-S", "0.0.0.0:8337", "-t", "public"]
+
+FROM sio_test as local
+
+USER root
+
+RUN apk add --no-cache --virtual build-essentials $PHPIZE_DEPS linux-headers && \
+    pecl install xdebug && \
+    docker-php-ext-enable xdebug && \
+    apk del build-essentials
+
+USER app
