@@ -9,11 +9,11 @@ use App\Payment\PaymentProcessorInterface;
 use Psr\Log\LoggerInterface;
 use Systemeio\TestForCandidates\PaymentProcessor\StripePaymentProcessor;
 
-class StripePayment implements PaymentProcessorInterface
+readonly class StripePayment implements PaymentProcessorInterface
 {
     public function __construct(
-        private readonly StripePaymentProcessor $processor,
-        private readonly LoggerInterface $logger,
+        private StripePaymentProcessor $processor,
+        private LoggerInterface $logger,
     ) {
     }
 

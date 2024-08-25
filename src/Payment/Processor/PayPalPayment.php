@@ -9,11 +9,11 @@ use App\Payment\PaymentProcessorInterface;
 use Psr\Log\LoggerInterface;
 use Systemeio\TestForCandidates\PaymentProcessor\PaypalPaymentProcessor;
 
-class PayPalPayment implements PaymentProcessorInterface
+readonly class PayPalPayment implements PaymentProcessorInterface
 {
     public function __construct(
-        private readonly PaypalPaymentProcessor $processor,
-        private readonly LoggerInterface $logger,
+        private PaypalPaymentProcessor $processor,
+        private LoggerInterface $logger,
     ) {
     }
 
