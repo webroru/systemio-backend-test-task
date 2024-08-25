@@ -7,9 +7,12 @@ namespace App\Controller;
 use App\Entity\Product;
 use App\Entity\Coupon;
 use App\Exception\UserException;
-use App\Factory\PaymentServiceFactory;
+use App\Payment\PaymentProcessorInterface;
+use App\Payment\Processor\PayPalPayment;
+use App\Payment\Processor\StripePayment;
 use App\Service\PriceCalculator;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,9 +22,11 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 class ProductController extends AbstractController
 {
     public function __construct(
-        private readonly PaymentServiceFactory $paymentServiceFactory,
         private readonly EntityManagerInterface $em,
         private readonly PriceCalculator $calculator,
+        private readonly LoggerInterface $logger,
+        private readonly PayPalPayment $payPalPayment,
+        private readonly StripePayment $stripePayment,
     ) {
     }
 
@@ -54,15 +59,26 @@ class ProductController extends AbstractController
 
         try {
             $price = $this->calculator->calculatePrice($product, $coupon, $data['taxNumber']);
-            $processorType = $data['paymentProcessor'];
-            $paymentService = $this->paymentServiceFactory->create($processorType);
-            $paymentService->process($price);
+            $processorType = (string) $data['paymentProcessor'];
+            $paymentService = $this->getPaymentService($processorType);
+            $paymentService->pay($price);
         } catch (UserException $e) {
+            $this->logger->error("Purchase error: {$e->getMessage()}");
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
-        } catch (\Exception) {
+        } catch (\Exception $e) {
+            $this->logger->error("Purchase error: {$e->getMessage()}");
             return new JsonResponse(['error' => 'Unexpected error occurred'], Response::HTTP_BAD_REQUEST);
         }
 
         return new JsonResponse(['status' => 'success'], Response::HTTP_OK);
+    }
+
+    private function getPaymentService(string $processorType): PaymentProcessorInterface
+    {
+        return match ($processorType) {
+            'paypal' => $this->payPalPayment,
+            'stripe' => $this->stripePayment,
+            default => throw new \InvalidArgumentException('Invalid payment processor type'),
+        };
     }
 }
