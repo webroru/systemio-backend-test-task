@@ -12,7 +12,7 @@ readonly class PaymentService
 {
     public function __construct(
         private PaymentProcessorInterface $paymentProcessor,
-        private LoggerInterface           $logger,
+        private LoggerInterface $logger,
     ) {
     }
 

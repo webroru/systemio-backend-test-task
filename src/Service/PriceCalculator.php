@@ -11,10 +11,10 @@ use App\Exception\UserException;
 use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 
-class PriceCalculator
+readonly class PriceCalculator
 {
     public function __construct(
-        private readonly LoggerInterface $logger,
+        private LoggerInterface $logger,
     ) {
     }
 

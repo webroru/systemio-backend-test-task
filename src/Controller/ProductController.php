@@ -36,7 +36,7 @@ class ProductController extends AbstractController
     ): JsonResponse {
         $data = json_decode($request->getContent(), true);
 
-        $product = $this->em->getRepository(Product::class)->find($data['product']);
+        $product = $this->em->getRepository(Product::class)->find((string) $data['product']);
         $coupon = $this->em->getRepository(Coupon::class)->findOneBy(['code' => $data['couponCode']]);
 
         try {
