@@ -30,6 +30,7 @@ class ProductController extends AbstractController
     ) {
     }
 
+    // TODO: add Validator
     #[Route('/calculate-price', name: 'calculate_price', methods: ['POST'])]
     public function calculatePrice(
         Request $request,
@@ -49,6 +50,7 @@ class ProductController extends AbstractController
         }
     }
 
+    // TODO: add Validator
     #[Route('/purchase', name: 'purchase', methods: ['POST'])]
     public function purchase(Request $request): JsonResponse
     {
@@ -73,6 +75,7 @@ class ProductController extends AbstractController
         return new JsonResponse(['status' => 'success'], Response::HTTP_OK);
     }
 
+    // TODO: move to ArgumentValueResolver
     private function getPaymentService(string $processorType): PaymentProcessorInterface
     {
         return match ($processorType) {
