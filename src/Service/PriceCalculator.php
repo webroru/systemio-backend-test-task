@@ -31,9 +31,9 @@ class PriceCalculator
             $price = $product->getPrice();
 
             if ($coupon) {
-                if ($coupon->getDiscountAmount()) {
+                if ($coupon->getDiscountAmount() !== null) {
                     $price -= $coupon->getDiscountAmount();
-                } elseif ($coupon->getDiscountPercent()) {
+                } elseif ($coupon->getDiscountPercent() !== null) {
                     $price -= $price * ($coupon->getDiscountPercent() / 100);
                 }
             }
@@ -50,7 +50,7 @@ class PriceCalculator
 
     private function getTaxRateByTaxNumber(string $taxNumber): float
     {
-        return match (true) {
+        return match (1) {
             preg_match('/^DE\d{9}$/', $taxNumber) => self::DE_TAX_RATE,
             preg_match('/^IT\d{11}$/', $taxNumber) => self::IT_TAX_RATE,
             preg_match('/^FR\d{2}\d{9}$/', $taxNumber) => self::FR_TAX_RATE,
