@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Enum\CouponType;
 use App\Repository\CouponRepository;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -19,10 +20,10 @@ class Coupon
     private ?string $code = null;
 
     #[ORM\Column(type: 'decimal', precision: 10, scale: 2, nullable: true)]
-    private ?float $discountAmount = null;
+    private ?float $value = null;
 
-    #[ORM\Column(type: 'decimal', precision: 5, scale: 2, nullable: true)]
-    private ?float $discountPercent = null;
+    #[ORM\Column(type: 'string', enumType: CouponType::class)]
+    private CouponType $type = CouponType::FIXED;
 
     public function getId(): ?int
     {
@@ -40,25 +41,25 @@ class Coupon
         return $this;
     }
 
-    public function getDiscountAmount(): ?float
+    public function getValue(): ?float
     {
-        return $this->discountAmount;
+        return $this->value;
     }
 
-    public function setDiscountAmount(?float $discountAmount): self
+    public function setValue(?float $value): self
     {
-        $this->discountAmount = $discountAmount;
+        $this->value = $value;
         return $this;
     }
 
-    public function getDiscountPercent(): ?float
+    public function getType(): CouponType
     {
-        return $this->discountPercent;
+        return $this->type;
     }
 
-    public function setDiscountPercent(?float $discountPercent): self
+    public function setType(CouponType $type): self
     {
-        $this->discountPercent = $discountPercent;
+        $this->type = $type;
         return $this;
     }
 }

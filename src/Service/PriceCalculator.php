@@ -6,6 +6,7 @@ namespace App\Service;
 
 use App\Entity\Product;
 use App\Entity\Coupon;
+use App\Enum\CouponType;
 use App\Exception\UserException;
 use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
@@ -31,11 +32,7 @@ class PriceCalculator
             $price = $product->getPrice();
 
             if ($coupon) {
-                if ($coupon->getDiscountAmount() !== null) {
-                    $price -= $coupon->getDiscountAmount();
-                } elseif ($coupon->getDiscountPercent() !== null) {
-                    $price -= $price * ($coupon->getDiscountPercent() / 100);
-                }
+                $price = $this->applyCoupon($product->getPrice(), $coupon);
             }
 
             $taxRate = $this->getTaxRateByTaxNumber($taxNumber);
@@ -46,6 +43,20 @@ class PriceCalculator
             $this->logger->error(sprintf('Calculate price error: `%s`', $e->getMessage()));
             throw new UserException('Calculate price error');
         }
+    }
+
+    private function applyCoupon(float $amount, Coupon $coupon): float
+    {
+        switch ($coupon->getType()) {
+            case CouponType::FIXED:
+                $amount -= $coupon->getValue();
+                break;
+            case CouponType::PERCENTAGE:
+                $amount -= ($amount * $coupon->getValue() / 100);
+                break;
+        }
+
+        return max(0, $amount);
     }
 
     private function getTaxRateByTaxNumber(string $taxNumber): float

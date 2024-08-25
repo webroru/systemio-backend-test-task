@@ -4,6 +4,7 @@ namespace App\DataFixtures;
 
 use App\Entity\Coupon;
 use App\Entity\Product;
+use App\Enum\CouponType;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 
@@ -29,11 +30,23 @@ class AppFixtures extends Fixture
         $coupons = [
             [
                 'code' => 'P10',
-                'discount' => 10
+                'value' => 10,
+                'type' => CouponType::PERCENTAGE,
             ],
             [
                 'code' => 'P100 ',
-                'discount' => 100
+                'value' => 100,
+                'type' => CouponType::PERCENTAGE,
+            ],
+            [
+                'code' => 'D15 ',
+                'value' => 15,
+                'type' => CouponType::FIXED,
+            ],
+            [
+                'code' => 'D10 ',
+                'value' => 10,
+                'type' => CouponType::FIXED,
             ],
         ];
 
@@ -48,7 +61,8 @@ class AppFixtures extends Fixture
         foreach ($coupons as $coupon) {
             $coupon = (new Coupon())
                 ->setCode($coupon['code'])
-                ->setDiscountAmount($coupon['discount'])
+                ->setValue($coupon['value'])
+                ->setType($coupon['type'])
             ;
             $manager->persist($coupon);
         }
