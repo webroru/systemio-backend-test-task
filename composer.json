@@ -72,6 +72,7 @@
         }
     },
     "require-dev": {
+        "doctrine/doctrine-fixtures-bundle": "*",
         "phpstan/phpstan-symfony": "^1.4",
         "phpunit/phpunit": "^10",
         "psalm/plugin-symfony": "^5.2",
