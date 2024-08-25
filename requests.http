@@ -9,6 +9,17 @@ Content-Type: application/json
   "couponCode": "D15"
 }
 
+### Calculate Price
+POST http://127.0.0.1:8337/calculate-price
+Accept: application/json
+Content-Type: application/json
+
+{
+  "product": 1,
+  "taxNumber": "DE123456789",
+  "couponCode": "P10"
+}
+
 ### Execute Purchase
 POST http://127.0.0.1:8337/purchase
 Accept: application/json
@@ -18,5 +29,17 @@ Content-Type: application/json
   "product": 1,
   "taxNumber": "IT12345678900",
   "couponCode": "D15",
+  "paymentProcessor": "paypal"
+}
+
+### Execute Purchase
+POST http://127.0.0.1:8337/purchase
+Accept: application/json
+Content-Type: application/json
+
+{
+  "product": 1,
+  "taxNumber": "IT12345678900",
+  "couponCode": "P10",
   "paymentProcessor": "paypal"
 }
