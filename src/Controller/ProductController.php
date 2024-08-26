@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Dto\CalculatePriceRequest;
+use App\Dto\PurchaseRequest;
 use App\Entity\Product;
 use App\Entity\Coupon;
 use App\Exception\UserException;
@@ -18,6 +20,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class ProductController extends AbstractController
 {
@@ -27,21 +30,40 @@ class ProductController extends AbstractController
         private readonly LoggerInterface $logger,
         private readonly PayPalPayment $payPalPayment,
         private readonly StripePayment $stripePayment,
+        private readonly ValidatorInterface $validator,
     ) {
     }
 
-    // TODO: add Validator
     #[Route('/calculate-price', name: 'calculate_price', methods: ['POST'])]
     public function calculatePrice(
         Request $request,
     ): JsonResponse {
         $data = json_decode($request->getContent(), true);
 
-        $product = $this->em->getRepository(Product::class)->find((string) $data['product']);
-        $coupon = $this->em->getRepository(Coupon::class)->findOneBy(['code' => $data['couponCode']]);
+        $calculatePriceRequest = new CalculatePriceRequest(
+            product: $data['product'] ?? null,
+            taxNumber: $data['taxNumber'] ?? null,
+            couponCode: $data['couponCode'] ?? null,
+        );
+
+        $violations = $this->validator->validate($calculatePriceRequest);
+        if (count($violations) > 0) {
+            $errors = [];
+            foreach ($violations as $violation) {
+                $errors[] = $violation->getMessage();
+            }
+            return new JsonResponse(['errors' => $errors], Response::HTTP_BAD_REQUEST);
+        }
+
+        $product = $this->em->getRepository(Product::class)->find((string) $calculatePriceRequest->product);
+        $coupon = $this->em->getRepository(Coupon::class)->findOneBy(['code' => $calculatePriceRequest->couponCode]);
+
+        if (!$product) {
+            return $this->json(['error' => 'Product not found'], Response::HTTP_NOT_FOUND);
+        }
 
         try {
-            $price = $this->calculator->calculatePrice($product, $coupon, $data['taxNumber']);
+            $price = $this->calculator->calculatePrice($product, $coupon, $calculatePriceRequest->taxNumber);
             return $this->json(['price' => $price]);
         } catch (UserException $e) {
             return $this->json(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
@@ -50,18 +72,37 @@ class ProductController extends AbstractController
         }
     }
 
-    // TODO: add Validator
     #[Route('/purchase', name: 'purchase', methods: ['POST'])]
     public function purchase(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
-        $product = $this->em->getRepository(Product::class)->find($data['product']);
-        $coupon = $this->em->getRepository(Coupon::class)->findOneBy(['code' => $data['couponCode']]);
+        $purchaseRequest = new PurchaseRequest(
+            product: $data['product'] ?? null,
+            taxNumber: $data['taxNumber'] ?? null,
+            couponCode: $data['couponCode'] ?? null,
+            paymentProcessor: $data['paymentProcessor'] ?? null,
+        );
+
+        $violations = $this->validator->validate($purchaseRequest);
+        if (count($violations) > 0) {
+            $errors = [];
+            foreach ($violations as $violation) {
+                $errors[] = $violation->getMessage();
+            }
+            return new JsonResponse(['errors' => $errors], Response::HTTP_BAD_REQUEST);
+        }
+
+        $product = $this->em->getRepository(Product::class)->find($purchaseRequest->product);
+        $coupon = $this->em->getRepository(Coupon::class)->findOneBy(['code' => $purchaseRequest->couponCode]);
+
+        if (!$product) {
+            return $this->json(['error' => 'Product not found'], Response::HTTP_NOT_FOUND);
+        }
 
         try {
-            $price = $this->calculator->calculatePrice($product, $coupon, $data['taxNumber']);
-            $processorType = (string) $data['paymentProcessor'];
+            $price = $this->calculator->calculatePrice($product, $coupon, $purchaseRequest->taxNumber);
+            $processorType = $purchaseRequest->paymentProcessor;
             $paymentService = $this->getPaymentService($processorType);
             $paymentService->pay($price);
         } catch (UserException $e) {
