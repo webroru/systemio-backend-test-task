@@ -14,7 +14,7 @@ readonly class PurchaseRequest
         #[Assert\Type(type: "integer", message: "Product ID must be an integer.")]
         public ?int $product,
         #[Assert\NotBlank(message: "Tax number is required.")]
-        #[ValidTaxNumber] // Ваша пользовательская валидация для налогового номера
+        #[ValidTaxNumber]
         public ?string $taxNumber,
         #[Assert\NotBlank(message: "Coupon code is required.")]
         #[Assert\Type(type: "string", message: "Coupon code must be a string.")]

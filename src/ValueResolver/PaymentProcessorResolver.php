@@ -11,6 +11,7 @@ use App\Payment\Processor\StripePayment;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Controller\ValueResolverInterface;
 use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadata;
+use Symfony\Component\Validator\Exception\InvalidArgumentException;
 
 readonly class PaymentProcessorResolver implements ValueResolverInterface
 {
@@ -23,9 +24,10 @@ readonly class PaymentProcessorResolver implements ValueResolverInterface
     public function resolve(Request $request, ArgumentMetadata $argument): iterable
     {
         if ($argument->getType() === PaymentProcessorInterface::class && $argument->getName() === 'paymentProcessor') {
-            yield match (PaymentType::from($request->getPayload()->get('paymentProcessor'))) {
+            yield match (PaymentType::tryFrom($request->getPayload()->get('paymentProcessor'))) {
                 PaymentType::PAYPAL => $this->payPalPayment,
                 PaymentType::STRIPE => $this->stripePayment,
+                default => throw new InvalidArgumentException('Invalid payment processor'),
             };
         }
     }
