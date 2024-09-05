@@ -19,7 +19,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 
 class ProductController extends AbstractController
@@ -30,7 +29,6 @@ class ProductController extends AbstractController
         private readonly LoggerInterface $logger,
         private readonly PayPalPayment $payPalPayment,
         private readonly StripePayment $stripePayment,
-        private readonly ValidatorInterface $validator,
     ) {
     }
 
@@ -57,7 +55,8 @@ class ProductController extends AbstractController
 
     #[Route('/purchase', name: 'purchase', methods: ['POST'])]
     public function purchase(
-        #[MapRequestPayload] PurchaseRequest $dto
+        #[MapRequestPayload] PurchaseRequest $dto,
+        PaymentProcessorInterface $paymentProcessor,
     ): JsonResponse {
         $product = $this->em->getRepository(Product::class)->find($dto->product);
         $coupon = $this->em->getRepository(Coupon::class)->findOneBy(['code' => $dto->couponCode]);
@@ -68,9 +67,7 @@ class ProductController extends AbstractController
 
         try {
             $price = $this->calculator->calculatePrice($product, $coupon, $dto->taxNumber);
-            $processorType = $dto->paymentProcessor;
-            $paymentService = $this->getPaymentService($processorType);
-            $paymentService->pay($price);
+            $paymentProcessor->pay($price);
         } catch (UserException $e) {
             $this->logger->error("Purchase error: {$e->getMessage()}");
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);

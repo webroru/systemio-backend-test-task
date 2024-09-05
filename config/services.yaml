@@ -24,5 +24,7 @@ services:
     # please note that last definitions always *replace* previous ones
     App\Payment\Processor\PayPalPayment: ~
     App\Payment\Processor\StripePayment: ~
+    App\ValueResolver\PaymentProcessorResolver:
+        tags: [ 'controller.argument_value_resolver' ]
     Systemeio\TestForCandidates\PaymentProcessor\PaypalPaymentProcessor: ~
     Systemeio\TestForCandidates\PaymentProcessor\StripePaymentProcessor: ~
